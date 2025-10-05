@@ -17,11 +17,10 @@ export class DoctorsService {
   ) {}
 
   async create(createDoctorDto: CreateDoctorDto) {
-    const hashedPassword = await bcrypt.hash(createDoctorDto.password, 10);
     const user = await this.usersService.create({
       name: createDoctorDto.name,
       email: createDoctorDto.email,
-      password: hashedPassword,
+      password: createDoctorDto.password,
       role: UserRole.DOCTOR,
     });
 
