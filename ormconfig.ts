@@ -1,7 +1,7 @@
 import { DataSource } from 'typeorm';
 import { User } from './src/usuarios/entities/usuario.entity';
 import { DoctorRegister } from './src/doctors/entities/doctor-register.entity';
-import { Agenda } from './src/entity/agendamento.entity';
+import { Agenda } from 'src/entities/agendamento.entity';
 import * as dotenv from 'dotenv';
 
 dotenv.config();

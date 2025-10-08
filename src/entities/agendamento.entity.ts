@@ -1,4 +1,4 @@
-!	import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 export enum UserRole {
   ADMIN = 'admin',

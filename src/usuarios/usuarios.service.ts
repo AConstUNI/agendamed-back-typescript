@@ -37,6 +37,18 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
+  async createWithRole(createUserDto: CreateUserDto, role: UserRole): Promise<User> {
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
+    const user = this.usersRepository.create({
+      ...createUserDto,
+      password: hashedPassword,
+      role,
+    });
+
+    return this.usersRepository.save(user);
+  }
+
   async findByEmail(email: string): Promise<User | undefined> {
     const user = await this.usersRepository.findOne({ where: { email } });
     return user ?? undefined;

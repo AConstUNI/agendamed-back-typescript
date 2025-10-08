@@ -17,13 +17,15 @@ export class DoctorsService {
   ) {}
 
   async create(createDoctorDto: CreateDoctorDto) {
-    const user = await this.usersService.create({
-      name: createDoctorDto.name,
-      email: createDoctorDto.email,
-      password: createDoctorDto.password,
-      role: UserRole.DOCTOR,
-    });
-
+    const user = await this.usersService.createWithRole(
+      {
+        name: createDoctorDto.name,
+        email: createDoctorDto.email,
+        password: createDoctorDto.password,
+      },
+      UserRole.DOCTOR,
+    );
+    
     const doctor = this.doctorRepository.create({
       crm: createDoctorDto.crm,
       specialty: createDoctorDto.specialty,
