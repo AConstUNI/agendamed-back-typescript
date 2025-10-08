@@ -12,6 +12,19 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) {}
 
+  async createAtendent(createUserDto: CreateUserDto): Promise<User> {
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
+    const atendent = this.usersRepository.create({
+      name: createUserDto.name,
+      email: createUserDto.email,
+      password: hashedPassword,
+      role: UserRole.ATENDENT,
+    });
+
+    return this.usersRepository.save(atendent);
+  }
+
   async create(createUserDto: CreateUserDto): Promise<User> {
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
@@ -31,5 +44,9 @@ export class UsersService {
 
   async findById(id: number) {
     return this.usersRepository.findOne({ where: { id } });
+  }
+
+  async getAll() {
+    return this.usersRepository.find()
   }
 }
