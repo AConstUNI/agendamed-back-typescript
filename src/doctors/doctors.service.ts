@@ -5,8 +5,8 @@ import { Repository } from 'typeorm';
 import { DoctorRegister } from './entities/doctor-register.entity';
 import { UsersService } from '../usuarios/usuarios.service';
 import { CreateDoctorDto } from './dto/create-doctor.dto';
-import * as bcrypt from 'bcrypt';
 import { UserRole } from '../usuarios/entities/usuario.entity';
+import { AdminLogService } from 'src/admin-log/admin-log.service';
 
 @Injectable()
 export class DoctorsService {
@@ -14,17 +14,19 @@ export class DoctorsService {
     @InjectRepository(DoctorRegister)
     private doctorRepository: Repository<DoctorRegister>,
     private usersService: UsersService,
+    private readonly adminLogService: AdminLogService
   ) {}
 
   async create(createDoctorDto: CreateDoctorDto) {
-    const hashedPassword = await bcrypt.hash(createDoctorDto.password, 10);
-    const user = await this.usersService.create({
-      name: createDoctorDto.name,
-      email: createDoctorDto.email,
-      password: hashedPassword,
-      role: UserRole.DOCTOR,
-    });
-
+    const user = await this.usersService.createWithRole(
+      {
+        name: createDoctorDto.name,
+        email: createDoctorDto.email,
+        password: createDoctorDto.password,
+      },
+      UserRole.DOCTOR,
+    );
+    
     const doctor = this.doctorRepository.create({
       crm: createDoctorDto.crm,
       specialty: createDoctorDto.specialty,
@@ -32,13 +34,32 @@ export class DoctorsService {
       userId: user.id,
     });
 
+    // Log the action
+    await this.adminLogService.create(
+      'admin@place.holder',
+      'CREATE_DOCTOR',
+      createDoctorDto.name,
+    );
+
     return this.doctorRepository.save(doctor);
   }
 
   async findByUserId(userId: number) {
     return this.doctorRepository.findOne({
-        where: { userId },
-        relations: ['user'], // opcional, retorna também os dados do usuário
+      where: { userId },
+      relations: ['user'], // opcional, retorna também os dados do usuário
+    });
+  }
+  async findByUserName(name: string) {
+    return this.doctorRepository.findOne({
+      relations: ['user'], // opcional, retorna também os dados do usuário
+      where: { user: { name } },
+    });
+  }
+  async findByUserSpecialty(specialty: string) {
+    return this.doctorRepository.findOne({
+      where: { specialty },
+      relations: ['user'], // opcional, retorna também os dados do usuário
     });
   }
 }
