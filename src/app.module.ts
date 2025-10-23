@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { DoctorsModule } from './doctors/doctors.module';
 import { User } from './usuarios/entities/usuario.entity';
 import { DoctorRegister } from './doctors/entities/doctor-register.entity';
+import { AdminLogModule } from './admin-log/admin-log.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { DoctorRegister } from './doctors/entities/doctor-register.entity';
     UsuariosModule,
     AuthModule,
     DoctorsModule,
+    AdminLogModule,
   ],
   controllers: [AppController],
   providers: [AppService],
