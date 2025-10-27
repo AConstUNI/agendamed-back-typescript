@@ -11,7 +11,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    private readonly adminLogService: AdminLogService
+    private readonly adminLogService: AdminLogService,
   ) {}
 
   async createAtendent(createUserDto: CreateUserDto): Promise<User> {
