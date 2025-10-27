@@ -36,9 +36,9 @@ export class DoctorsService {
 
     // Log the action
     await this.adminLogService.create(
-      'admin@place.holder',
+      process.env.SEED_ADMIN_EMAIL || 'admin@example.com',
       'CREATE_DOCTOR',
-      createDoctorDto.name,
+      createDoctorDto.email,
     );
 
     return this.doctorRepository.save(doctor);
