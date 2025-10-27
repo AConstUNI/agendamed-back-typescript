@@ -24,6 +24,13 @@ export class UsersService {
       role: UserRole.ATENDENT,
     });
 
+    // Log the action
+    await this.adminLogService.create(
+      process.env.SEED_ADMIN_EMAIL || 'admin@example.com',
+      'CREATE_ATTENDANT',
+      createUserDto.email,
+    );
+
     return this.usersRepository.save(atendent);
   }
 
@@ -38,9 +45,9 @@ export class UsersService {
 
     // Log the action
     await this.adminLogService.create(
-      'admin@place.holder',
-      'CREATE_DOCTOR',
-      createUserDto.name,
+      createUserDto.who || 'User email not registered',
+      'CREATE_USER',
+      createUserDto.email,
     );
 
     return this.usersRepository.save(user);
