@@ -11,6 +11,9 @@ import { User } from './usuarios/entities/usuario.entity';
 import { DoctorRegister } from './doctors/entities/doctor-register.entity';
 import { AdminLogModule } from './admin-log/admin-log.module';
 import { AdminLog } from './admin-log/entities/admin-log.entity';
+import { AgendamentoModule } from './agendamento/agendamento.module';
+import { Agendamento } from './agendamento/entities/agendamento.entity';
+
 
 @Module({
   imports: [
@@ -20,15 +23,17 @@ import { AdminLog } from './admin-log/entities/admin-log.entity';
       host: process.env.DB_HOST || 'localhost', // fallback
       port: parseInt(process.env.DB_PORT || '5432'), // fallback
       username: process.env.DB_USERNAME || 'postgres',
-      password: process.env.DB_PASSWORD || 'postgres',
+      password: process.env.DB_PASSWORD || '12345',
       database: process.env.DB_NAME || 'nestdb',
-      entities: [User, DoctorRegister, AdminLog],
+      entities: [User, DoctorRegister, Agendamento, AdminLog],
+
       synchronize: true,
     }),
     UsuariosModule,
     AuthModule,
     DoctorsModule,
     AdminLogModule,
+    AgendamentoModule,
   ],
   controllers: [AppController],
   providers: [AppService],
