@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Agendamento } from './entities/agendamento.entity';
 import { DoctorRegister } from '../doctors/entities/doctor-register.entity';
 import { CreateAgendamentoDto } from './dto/create-agendamento.dto';
+import { User } from 'src/usuarios/entities/usuario.entity';
+import { AdminLogService } from 'src/admin-log/admin-log.service';
 
 @Injectable()
 export class AgendamentoService {
@@ -13,6 +15,11 @@ export class AgendamentoService {
 
     @InjectRepository(DoctorRegister)
     private readonly doctorRepository: Repository<DoctorRegister>,
+
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+
+    private readonly adminLogService: AdminLogService
   ) {}
 
   async create(dto: CreateAgendamentoDto): Promise<Agendamento> {
@@ -28,12 +35,49 @@ export class AgendamentoService {
       throw new Error('Médico já possui agendamento nesse horário.');
     }
 
+    // Log the action
+    await this.adminLogService.create(
+      dto.who || 'Unknown Attendant',
+      'CREATE_APPOINTMENT',
+      await this.userRepository.findOne({
+        where: {
+          id: dto.pacienteId
+        }
+      }).then((v) => v?.email) || 'Unknown User'
+    );
+
     const agendamento = this.agendamentoRepository.create(dto);
     return this.agendamentoRepository.save(agendamento);
   }
 
+  async delete(id: number, who?: string): Promise<void> {
+    const agendamento = await this.agendamentoRepository.findOne({
+      where: { id },
+      relations: ['paciente'],
+    });
+
+    if (!agendamento) {
+      throw new Error('Agendamento não encontrado.');
+    }
+
+    // Log the action
+    await this.adminLogService.create(
+      who || 'Unknown Attendant',
+      'DELETE_APPOINTMENT',
+      agendamento.paciente?.email || 'Unknown User'
+    );
+
+    await this.agendamentoRepository.remove(agendamento);
+  }
+
   findAll(): Promise<Agendamento[]> {
-    return this.agendamentoRepository.find({ relations: ['paciente', 'medico'] });
+    return this.agendamentoRepository.find({ 
+      relations: ['paciente', 'medico', 'medico.user'],
+      order: {
+        data: 'ASC',
+        hora: 'ASC',
+      },
+    });
   }
 
   async getMedicosDisponiveis(data: string, hora: string): Promise<DoctorRegister[]> {
@@ -51,25 +95,38 @@ export class AgendamentoService {
       throw new Error('É necessário fornecer pacienteId ou userId do médico para filtrar agendamentos.');
     }
 
-    const where: any[] = [];
+    // Data e hora atual
+    const agora = new Date();
+
+    // QueryBuilder para fazer comparação de data e hora
+    const query = this.agendamentoRepository.createQueryBuilder('agendamento')
+      .leftJoinAndSelect('agendamento.paciente', 'paciente')
+      .leftJoinAndSelect('agendamento.medico', 'medico')
+      .leftJoinAndSelect('medico.user', 'user')
+      .where('1=1'); // placeholder para encadear condições
 
     if (pacienteId) {
-      where.push({ pacienteId });
+      query.andWhere('agendamento.pacienteId = :pacienteId', { pacienteId });
     }
 
     if (userIdMedico) {
-      // usa o doctorRepository que você já tem
       const doctor = await this.doctorRepository.findOne({ where: { userId: userIdMedico } });
       if (!doctor) {
         throw new Error('Usuário médico não possui registro de DoctorRegister');
       }
-      where.push({ medicoId: doctor.id });
+      query.andWhere('agendamento.medicoId = :medicoId', { medicoId: doctor.id });
     }
 
-    return this.agendamentoRepository.find({
-      where,
-      relations: ['paciente', 'medico'],
-      order: { data: 'ASC', hora: 'ASC' },
+    // Filtrar agendamentos que já passaram
+    query.andWhere('(agendamento.data > :hoje OR (agendamento.data = :hoje AND agendamento.hora >= :horaAtual))', {
+      hoje: agora.toISOString().split('T')[0],       // yyyy-mm-dd
+      horaAtual: agora.toTimeString().substring(0,5),  // HH:mm
     });
+
+    // Ordenar
+    query.orderBy('agendamento.data', 'ASC')
+        .addOrderBy('agendamento.hora', 'ASC');
+
+    return query.getMany();
   }
 }

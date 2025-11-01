@@ -5,4 +5,5 @@ export class CreateAgendamentoDto {
   hora: string; // HH:mm
   sala: string;
   telefone: string;
+  who?: string;
 }

@@ -45,7 +45,7 @@ export class UsersService {
 
     // Log the action
     await this.adminLogService.create(
-      createUserDto.who || 'User email not registered',
+      createUserDto.who || 'Unknown User',
       'CREATE_USER',
       createUserDto.email,
     );

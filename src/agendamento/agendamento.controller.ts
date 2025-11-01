@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, BadRequestException, Delete } from '@nestjs/common';
 import { AgendamentoService } from './agendamento.service';
 import { CreateAgendamentoDto } from './dto/create-agendamento.dto';
 
@@ -13,6 +13,15 @@ export class AgendamentoController {
     } catch (error) {
       throw new BadRequestException(error.message);
     }
+  }
+
+  @Delete(':id')
+  async delete(
+    @Param('id') id: number,
+    @Body('who') who: string
+  ) {
+    await this.agendamentoService.delete(id, who);
+    return { message: 'Agendamento removido com sucesso.' };
   }
 
   @Get()
